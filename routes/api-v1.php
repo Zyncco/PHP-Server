@@ -14,7 +14,7 @@
 use \Zync\Helpers\Enums\ApiError;
 
 $app->get('ping', function () {
-    return response("<img src='http://i.imgur.com/dglafLV.jpg'>");
+    return response("<img src='https://i.imgur.com/dglafLV.jpg'>");
 });
 
 $app->get("user/callback", function () {

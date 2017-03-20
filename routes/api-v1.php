@@ -14,7 +14,7 @@
 use \Zync\Helpers\Enums\ApiError;
 
 $app->get('ping', function () {
-    return (new \Zync\Helpers\DatastoreOld(env("GAE_APP_ID")))->listBooks();
+    return response("<img src='http://i.imgur.com/dglafLV.jpg'>");
 });
 
 $app->get("user/callback", function () {

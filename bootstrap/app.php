@@ -93,7 +93,7 @@ $app->singleton(
 |
 */
 
-$app->group(['namespace' => 'Zync\Http\Controllers\Api\v1', 'prefix' => 'api/v0'], function ($app) {
+$app->group(['namespace' => 'Zync\Http\Controllers\Api\v1', 'prefix' => 'v0'], function ($app) {
 	require __DIR__.'/../routes/api-v1.php';
 });
 

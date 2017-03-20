@@ -38,21 +38,6 @@ class User {
         return new User($user);
     }
 
-    public static function findByGoogleToken($token){
-        $query = Datastore::get()->query()
-            ->kind(self::$kind)
-            ->filter("google_token", "=", $token);
-
-        $result = Datastore::get()->runQuery($query);
-        $user = $result->current();
-
-        if(is_null($user)){
-            return null;
-        }
-
-        return new User($user);
-    }
-
     public static function findByEmail($email) {
         $query = Datastore::get()->query()
             ->kind(self::$kind)

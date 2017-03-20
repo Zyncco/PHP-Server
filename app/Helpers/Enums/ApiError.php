@@ -7,13 +7,14 @@ class ApiError extends Enum {
     /**
      * 000 Block related to system
      */
-    const EXCEPTION_THROWN = ["success" => false, "error" => ["code" => 1]];
+    static $EXCEPTION_THROWN = ["success" => false, "error" => ["code" => 1]];
 
     /**
      * 100 Block related to user
      */
-    const INVALID_ID_TOKEN = ["success" => false, "error" => ["code" => 101, "message" => "Invalid ID Token"]];
-    const INVALID_AUTH_CODE = ["success" => false, "error" => ["code" => 102, "message" => "Invalid Auth Code"]];
+	static $INVALID_ZYNC_TOKEN = ["success" => false, "error" => ["code" => 100, "message" => "Invalid X-ZYNC-TOKEN"]];
+	static $INVALID_TOKEN = ["success" => false, "error" => ["code" => 101, "message" => "Invalid Token"]];
+	static $INVALID_AUTH_CODE = ["success" => false, "error" => ["code" => 102, "message" => "Invalid Auth Code"]];
 
 
     /**
@@ -26,8 +27,8 @@ class ApiError extends Enum {
      * @return array
      */
     public static function exception($exception) {
-        $response = ApiError::EXCEPTION_THROWN;
-        $response["error"]["message"] = $exception->getMessage();
+        $response = ApiError::$EXCEPTION_THROWN;
+        $response["error"]["message"] = $exception->getMessage() . " (". $exception->getFile() . ":" . $exception->getLine() . ")";
         return $response;
     }
 

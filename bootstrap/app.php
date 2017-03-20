@@ -59,13 +59,10 @@ $app->singleton(
 |
 */
 
-// $app->middleware([
-//    App\Http\Middleware\ExampleMiddleware::class
-// ]);
-
-// $app->routeMiddleware([
-//     'auth' => App\Http\Middleware\Authenticate::class,
-// ]);
+$app->routeMiddleware([
+	'x-zync-token' => Zync\Http\Middleware\XZyncToken::class,
+	'pretty' => Zync\Http\Middleware\PrettyAPI::class,
+]);
 
 /*
 |--------------------------------------------------------------------------
@@ -93,8 +90,14 @@ $app->singleton(
 |
 */
 
-$app->group(['namespace' => 'Zync\Http\Controllers\Api\v1', 'prefix' => 'v0'], function ($app) {
-	require __DIR__.'/../routes/api-v1.php';
+$app->group(['namespace' => 'Zync\Http\Controllers\Api\v1', 'prefix' => 'v0', 'middleware' => 'pretty'], function (\Laravel\Lumen\Application $app) {
+	$app->group(['prefix' => 'v0'], function (\Laravel\Lumen\Application $app) {
+		require __DIR__.'/../routes/api-v1-insecure.php';
+	});
+
+	$app->group(['prefix' => 'v0', 'middleware' => 'x-zync-token'], function (\Laravel\Lumen\Application $app) {
+		require __DIR__.'/../routes/api-v1-secure.php';
+	});
 });
 
 $app->configureMonologUsing(function($monolog) {

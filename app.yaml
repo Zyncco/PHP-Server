@@ -2,6 +2,9 @@ runtime: php55
 api_version: 1
 
 handlers:
+- url: /.well-known
+  static_dir: .well-known
+
 - url: /.*
   script: public/index.php
 

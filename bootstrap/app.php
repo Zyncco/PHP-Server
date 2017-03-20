@@ -93,8 +93,13 @@ $app->singleton(
 |
 */
 
-$app->group(['namespace' => 'Zync\Http\Controllers\Api\v1', 'prefix' => 'api/v1'], function ($app) {
+$app->group(['namespace' => 'Zync\Http\Controllers\Api\v1', 'prefix' => 'api/v0'], function ($app) {
 	require __DIR__.'/../routes/api-v1.php';
+});
+
+$app->configureMonologUsing(function($monolog) {
+    $monolog->pushHandler(new \Monolog\Handler\NullHandler());
+    return $monolog;
 });
 
 return $app;

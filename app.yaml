@@ -1,0 +1,13 @@
+runtime: php55
+api_version: 1
+
+handlers:
+- url: /.*
+  script: public/index.php
+
+skip_files:
+- ^(.*/)?#.*#$
+- ^(.*/)?.*~$
+- ^(.*/)?.*\.py[co]$
+- ^(.*/)?.*/RCS/.*$
+

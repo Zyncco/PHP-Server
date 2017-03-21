@@ -2,7 +2,7 @@
 
 namespace Zync\Kinds;
 
-use Google\Cloud\Datastore\Key;
+use Google\Cloud\Datastore\Entity;
 use Zync\Helpers\Datastore;
 
 class User {
@@ -17,12 +17,18 @@ class User {
         'clip_count' => 'integer'
     ];
 
+	/**
+	 * @var Entity
+	 */
     private $data;
 
     private function __construct($data) {
         $this->data = $data;
     }
 
+	/**
+	 * @return null|User
+	 */
     public static function findByZyncToken($token){
         $query = Datastore::get()->query()
             ->kind(self::$kind)
@@ -38,6 +44,9 @@ class User {
         return new User($user);
     }
 
+	/**
+	 * @return null|User
+	 */
     public static function findByEmail($email) {
         $query = Datastore::get()->query()
             ->kind(self::$kind)
@@ -53,6 +62,9 @@ class User {
         return new User($user);
     }
 
+	/**
+	 * @return User
+	 */
     public static function create($data){
         self::verifyData($data);
 
@@ -74,15 +86,11 @@ class User {
         }
     }
 
+	/**
+	 * @return Entity
+	 */
     public function getData(){
         return $this->data;
-    }
-
-    public function getHexPath(){
-        $hex = dechex($this->data["id"]);
-        $padded = str_pad($hex, 14, "0");
-        $path = implode("/", str_split($padded, 2));
-        return $path;
     }
 
     public function setGoogleToken($token){
@@ -93,6 +101,13 @@ class User {
         $transaction = Datastore::get()->transaction();
         $transaction->upsert($this->data);
         $transaction->commit();
+    }
+
+	/**
+	 * @return Clipboard
+	 */
+    public function getClipboard(){
+		return Clipboard::findByUserID($this->data->key()->pathEndIdentifier());
     }
 
 }

@@ -20,7 +20,13 @@ class ApiError extends Enum {
     /**
      * 200 Block related to clipboard
      */
-
+	static $CLIPBOARD_EMPTY = ["success" => false, "error" => ["code" => 200, "message" => "Clipboard Empty"]];
+	static $CLIPBOARD_OUTDATED = ["success" => false, "error" => ["code" => 201, "message" => "Clipboard Outdated"]];
+	static $CLIPBOARD_LATE = ["success" => false, "error" => ["code" => 202, "message" => "Clipboard Late"]];
+	static $CLIPBOARD_IDENTICAL = ["success" => false, "error" => ["code" => 203, "message" => "Clipboard Identical"]];
+	static $CLIPBOARD_INVALID = ["success" => false, "error" => ["code" => 204, "message" => "Clipboard Invalid"]];
+	static $CLIPBOARD_TIME_TRAVEL = ["success" => false, "error" => ["code" => 205, "message" => "Clipboard is time traveling"]];
+	static $CLIPBOARD_NOT_FOUND = ["success" => false, "error" => ["code" => 206, "message" => "Clipboard not found"]];
 
     /**
      * @param $exception \Exception

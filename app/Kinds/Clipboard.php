@@ -2,16 +2,165 @@
 
 namespace Zync\Kinds;
 
+use Google\Cloud\Datastore\Entity;
+use Zync\Helpers\Bucket;
+use Zync\Helpers\Datastore;
+
 class Clipboard {
 
-    private $kind = "clipboard";
+	const CLIP_COUNT = 10;
+	const EXPIRY_TIME_MIN = 60;
+	const EXPIRY_TIME_MAX = 300;
 
-    private $columns = [
-        'user' => 'integer',
-        'time' => 'integer',
-        'sha256' => 'string',
-        'md5' => 'string',
-        'encrypted' => 'bool',
-    ];
+	private static $kind = "clipboard";
+
+	/**
+	 * @var Entity
+	 */
+	private $data;
+
+	private function __construct($data) {
+		$this->data = $data;
+	}
+
+	/**
+	 * @return Clipboard
+	 */
+	public static function findByUserID($id){
+		$query = Datastore::get()->query()
+			->kind(self::$kind)
+			->filter("user", "=", $id);
+
+		$result = Datastore::get()->runQuery($query);
+		$clipboard = $result->current();
+
+		if(is_null($clipboard)){
+			return null;
+		}
+
+		return new Clipboard($clipboard);
+	}
+
+	/**
+	 * @return Clipboard
+	 */
+	public static function create($userID, $data){
+		$insert = [
+			'user' => $userID,
+			'clips' => [
+				$data["properties"]["time"] => [
+					"hash" => [
+						"crc32" => $data["properties"]["hash"]["crc32"]
+					]
+				]
+			],
+		];
+
+		$key = Datastore::get()->key(self::$kind);
+		$entity = Datastore::get()->entity($key, $insert);
+
+		Datastore::get()->insert($entity);
+
+		$insert["id"] = $entity->key()->pathEndIdentifier();
+		return new Clipboard($entity);
+	}
+
+	/**
+	 * @return Entity
+	 */
+	public function getData(){
+		return $this->data;
+	}
+
+	public function save(){
+		$transaction = Datastore::get()->transaction();
+		$transaction->upsert($this->data);
+		$transaction->commit();
+	}
+
+	public function saveContents($data, $timestamp){
+		$path = $this->getHexPath($timestamp);
+
+		$file = Bucket::get()->upload($data, [
+			"name" => $path
+		]);
+
+		return $file;
+	}
+
+	/**
+	 * @return string
+	 */
+	public function getHexPath($timestamp){
+		$hex = dechex($this->data->key()->pathEndIdentifier());
+		$padded = str_pad($hex, 14, "0");
+		$path = implode("/", str_split($padded, 2));
+		$path = "/data/clipboards/" . $path . "/" . $timestamp;
+		return $path;
+	}
+
+	public function newClip($data){
+		$clips = $this->data["clips"];
+
+		if(!isset($clips[$data["properties"]["time"]]) && count($clips) + 1 > Clipboard::CLIP_COUNT){
+			asort($clips);
+			$removed = array_slice($clips, -1, 1, true);
+			$timestamp = key($removed);
+
+			try{
+				Bucket::get()->delete([
+					"name" => $this->getHexPath($timestamp)
+				]);
+			}catch(\Exception $e){
+			}
+		}
+
+		$clips[$data["properties"]["time"]] = [
+			"hash" => [
+				"crc32" => $data["properties"]["hash"]["crc32"]
+			]
+		];
+
+		$this->data["clips"] = $clips;
+	}
+
+	public function exists($crc32){
+		foreach($this->data["clips"] as $timestamp => $clip){
+			if($clip["hash"]["crc32"] == $crc32){
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	public function getHistory(){
+		$history = [];
+		$clips = $this->data["clips"];
+
+		foreach($clips as $timestamp => $clip){
+			array_push($history, [
+				"time" => $timestamp,
+				"hash" => $clip["hash"]
+			]);
+		}
+
+		return $history;
+	}
+
+	public function getLastClipboardContents(){
+		$clips = $this->data["clips"];
+		return Bucket::get()->object($this->getHexPath(key($clips)))->downloadAsString();
+	}
+
+	public function getTimestampClipboardContents($timestamp){
+		$clips = $this->data["clips"];
+
+		if(!isset($clips[$timestamp])){
+			return null;
+		}
+
+		return Bucket::get()->object($this->getHexPath($timestamp))->downloadAsString();
+	}
 
 }

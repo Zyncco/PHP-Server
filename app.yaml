@@ -13,11 +13,11 @@ skip_files:
 - ^(.*/)?.*~$
 - ^(.*/)?.*\.py[co]$
 - ^(.*/)?.*/RCS/.*$
-- ^(.*/)?\.git.*$
+- ^(.*/)?\.git$
 - ^(.*/)?composer.phar$
 - ^(.*/)?phpunit.xml$
-- ^(.*)?/tests$
-- ^\.env\.example$
+- ^(.*/)?/tests$
+- ^.env.example$
 - ^tests$
 - ^storage$
 - ^artisan$

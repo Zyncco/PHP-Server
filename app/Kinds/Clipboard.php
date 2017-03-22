@@ -132,7 +132,7 @@ class Clipboard {
 		]);
 
 		$this->data["clips"] = $clips;
-		$this->data["clip_count"] = $clips["clip_count"] + 1;
+		$this->data["clip_count"] = $this->data["clip_count"] + 1;
 		$this->data["latest"] = $data["timestamp"];
 	}
 
@@ -162,42 +162,63 @@ class Clipboard {
 		return $history;
 	}
 
-	public function getLastClipboardContents(){
-		return Bucket::get()->object($this->getHexPath($this->data["latest"]))->downloadAsString();
-	}
-
-	public function getTimestampClipboardContents($timestamp){
+	public function getLastClipboard(){
 		$clips = $this->data["clips"];
 
-		if(!isset($clips[$timestamp])){
+		foreach($clips as $clip){
+			if($clip["timestamp"] == $this->data["latest"]){
+				return [
+					"timestamp" => $this->data["latest"],
+					"hash" => $clip["hash"],
+					"encryption" => $clip["encryption"],
+					"payload-type" => $clip["payload-type"],
+					"payload" => Bucket::get()->object($this->getHexPath($this->data["latest"]))->downloadAsString()
+				];
+			}
+		}
+
+		return null;
+	}
+
+	public function getTimestampClipboard($timestamp){
+		$clips = $this->data["clips"];
+
+		foreach($clips as $clip){
+			if($clip["timestamp"] == $timestamp){
+				return [
+					"timestamp" => $timestamp,
+					"hash" => $clip["hash"],
+					"encryption" => $clip["encryption"],
+					"payload-type" => $clip["payload-type"],
+					"payload" => Bucket::get()->object($this->getHexPath($timestamp))->downloadAsString()
+				];
+			}
+		}
+
+		return null;
+	}
+
+	public function getManyTimestampClipboards(array $timestamps){
+		$clips = $this->data["clips"];
+
+		$response = [];
+		foreach($clips as $clip){
+			if(in_array($clip["timestamp"], $timestamps)){
+				array_push($response, [
+					"timestamp" => $clip["timestamp"],
+					"hash" => $clip["hash"],
+					"encryption" => $clip["encryption"],
+					"payload-type" => $clip["payload-type"],
+					"payload" => Bucket::get()->object($this->getHexPath($clip["timestamp"]))->downloadAsString()
+				]);
+			}
+		}
+
+		if(count($response) != count($timestamps)){
 			return null;
 		}
 
-		return Bucket::get()->object($this->getHexPath($timestamp))->downloadAsString();
-	}
-
-	public function getLastClipboardVerification(){
-		return [
-			"timestamp" => $this->data["latest"],
-			"hash" => $this->data["clips"][$this->data["latest"]]["hash"],
-			"encryption" => $this->data["clips"][$this->data["latest"]]["encryption"],
-			"payload-type" => $this->data["clips"][$this->data["latest"]]["payload-type"]
-		];
-	}
-
-	public function getTimestampClipboardVerification($timestamp){
-		$clips = $this->data["clips"];
-
-		if(!isset($clips[$timestamp])){
-			return null;
-		}
-
-		return [
-			"timestamp" => $timestamp,
-			"hash" => $clips[$timestamp]["hash"],
-			"encryption" => $clips[$timestamp]["encryption"],
-			"payload-type" => $clips[$timestamp]["payload-type"]
-		];
+		return $response;
 	}
 
 }

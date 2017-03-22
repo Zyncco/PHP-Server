@@ -33,21 +33,7 @@ class ClipboardController extends Controller {
 			return response()->json(ApiError::$CLIPBOARD_EMPTY, 200);
 		}
 
-		return $clipboard->getLastClipboardContents();
-	}
-
-	public function getVerify(Request $request) {
-		$user = User::getFromHeaderToken();
-		$clipboard = $user->getClipboard();
-
-		if(is_null($clipboard)){
-			return response()->json(ApiError::$CLIPBOARD_EMPTY, 200);
-		}
-
-		return [
-			"success" => true,
-			"data" => $clipboard->getLastClipboardVerification()
-		];
+		return $clipboard->getLastClipboard();
 	}
 
 	public function getClipboardWithTimestamp(Request $request, $timestamp) {
@@ -58,33 +44,28 @@ class ClipboardController extends Controller {
 			return response()->json(ApiError::$CLIPBOARD_EMPTY, 200);
 		}
 
-		$contents = $clipboard->getTimestampClipboardContents($timestamp);
+		if (strpos($timestamp, ',') !== false) {
+			$contents = $clipboard->getManyTimestampClipboards(explode(",", $timestamp));
+
+			if(is_null($contents)){
+				return response()->json(ApiError::$CLIPBOARDS_NOT_FOUND, 404);
+			}
+
+			return [
+				"success" => true,
+				"data" => [
+					"clipboards" => $contents
+				]
+			];
+		}
+
+		$contents = $clipboard->getTimestampClipboard($timestamp);
 
 		if(is_null($contents)){
 			return response()->json(ApiError::$CLIPBOARD_NOT_FOUND, 404);
 		}
 
-		return $clipboard->getTimestampClipboardContents($timestamp);
-	}
-
-	public function getVerifyWithTimestamp(Request $request, $timestamp) {
-		$user = User::getFromHeaderToken();
-		$clipboard = $user->getClipboard();
-
-		if(is_null($clipboard)){
-			return response()->json(ApiError::$CLIPBOARD_EMPTY, 200);
-		}
-
-		$verification = $clipboard->getTimestampClipboardVerification($timestamp);
-
-		if(is_null($verification)){
-			return response()->json(ApiError::$CLIPBOARD_NOT_FOUND, 404);
-		}
-
-		return [
-			"success" => true,
-			"data" => $verification
-		];
+		return $contents;
 	}
 
 	public function postClipboard(Request $request) {

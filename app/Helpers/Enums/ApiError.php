@@ -27,6 +27,7 @@ class ApiError extends Enum {
 	static $CLIPBOARD_INVALID = ["success" => false, "error" => ["code" => 204, "message" => "Clipboard Invalid"]];
 	static $CLIPBOARD_TIME_TRAVEL = ["success" => false, "error" => ["code" => 205, "message" => "Clipboard is time traveling"]];
 	static $CLIPBOARD_NOT_FOUND = ["success" => false, "error" => ["code" => 206, "message" => "Clipboard not found"]];
+	static $CLIPBOARDS_NOT_FOUND = ["success" => false, "error" => ["code" => 207, "message" => "One or more of requested clipboards not found"]];
 
     /**
      * @param $exception \Exception

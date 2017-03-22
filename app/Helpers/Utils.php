@@ -20,13 +20,19 @@ namespace Zync\Helpers;
 
 class Utils {
 
-	static function array_diff_key_recursive(array $arr1, array $arr2){
-		$diff = array_diff_key($arr1, $arr2);
-		$intersect = array_intersect_key($arr1, $arr2);
+	private static $data_types = ["boolean", "integer", "double", "string", "array", "object", "resource", "NULL"];
+
+	static function array_diff_key_recursive(array $model, array $array){
+		if(count($model) != count($array)){
+			return false;
+		}
+
+		$diff = array_diff_key($model, $array);
+		$intersect = array_intersect_key($model, $array);
 
 		foreach($intersect as $k => $v){
-			if(is_array($arr1[$k]) && is_array($arr2[$k])){
-				$d = Utils::array_diff_key_recursive($arr1[$k], $arr2[$k]);
+			if(is_array($model[$k]) && is_array($array[$k])){
+				$d = Utils::array_diff_key_recursive($model[$k], $array[$k]);
 
 				if($d){
 					$diff[$k] = $d;
@@ -35,6 +41,35 @@ class Utils {
 		}
 
 		return $diff;
+	}
+
+	static function array_validate_data_types(array $model, array $array){
+		foreach($model as $key => $type){
+			if(is_array($model[$key])){
+				if(!Utils::array_validate_data_types($model[$key], $array[$key])){
+					return false;
+				}
+			}else{
+				if(in_array($type, Utils::$data_types)){
+					if($type != gettype($array[$key])){
+						var_dump($array[$key] . " NOT IN " . $type);
+						return false;
+					}
+				}else{
+					if(!in_array($array[$key], explode("|", $type))){
+						var_dump($array[$key] . " NOT IN " . $type);
+						return false;
+					}
+				}
+			}
+		}
+
+		return true;
+	}
+
+	static function array_validate_model(array $model, array $array){
+		return (count(Utils::array_diff_key_recursive($model, $array)) == 0)
+			&& Utils::array_validate_data_types($model, $array);
 	}
 
 }

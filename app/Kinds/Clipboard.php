@@ -47,11 +47,12 @@ class Clipboard {
 	public static function create($userID, $data){
 		$insert = [
 			'user' => $userID,
+			'clip_count' => 1,
 			'clips' => [
-				$data["properties"]["time"] => [
-					"hash" => [
-						"crc32" => $data["properties"]["hash"]["crc32"]
-					]
+				$data["timestamp"] => [
+					"hash" => $data["hash"],
+					"encryption" => $data["encryption"],
+					"payload-type" => $data["payload-type"]
 				]
 			],
 		];
@@ -102,7 +103,7 @@ class Clipboard {
 	public function newClip($data){
 		$clips = $this->data["clips"];
 
-		if(!isset($clips[$data["properties"]["time"]]) && count($clips) + 1 > Clipboard::CLIP_COUNT){
+		if(!isset($clips[$data["timestamp"]]) && count($clips) + 1 > Clipboard::CLIP_COUNT){
 			asort($clips);
 			$removed = array_slice($clips, -1, 1, true);
 			$timestamp = key($removed);
@@ -115,13 +116,14 @@ class Clipboard {
 			}
 		}
 
-		$clips[$data["properties"]["time"]] = [
-			"hash" => [
-				"crc32" => $data["properties"]["hash"]["crc32"]
-			]
+		$clips[$data["timestamp"]] = [
+			"hash" => $data["hash"],
+			"encryption" => $data["encryption"],
+			"payload-type" => $data["payload-type"]
 		];
 
 		$this->data["clips"] = $clips;
+		$this->data["clip_count"] = $clips["clip_count"] + 1;
 	}
 
 	public function exists($crc32){
@@ -140,8 +142,10 @@ class Clipboard {
 
 		foreach($clips as $timestamp => $clip){
 			array_push($history, [
-				"time" => $timestamp,
-				"hash" => $clip["hash"]
+				"timestamp" => $timestamp,
+				"hash" => $clip["hash"],
+				"encryption" => $clip["encryption"],
+				"payload-type" => $clip["payload-type"]
 			]);
 		}
 
@@ -161,6 +165,33 @@ class Clipboard {
 		}
 
 		return Bucket::get()->object($this->getHexPath($timestamp))->downloadAsString();
+	}
+
+	public function getLastClipboardVerification(){
+		$clips = $this->data["clips"];
+		$lastTimestamp = key($clips);
+
+		return [
+			"timestamp" => $lastTimestamp,
+			"hash" => $clips[$lastTimestamp]["hash"],
+			"encryption" => $clips[$lastTimestamp]["encryption"],
+			"payload-type" => $clips[$lastTimestamp]["payload-type"]
+		];
+	}
+
+	public function getTimestampClipboardVerification($timestamp){
+		$clips = $this->data["clips"];
+
+		if(!isset($clips[$timestamp])){
+			return null;
+		}
+
+		return [
+			"timestamp" => $timestamp,
+			"hash" => $clips[$timestamp]["hash"],
+			"encryption" => $clips[$timestamp]["encryption"],
+			"payload-type" => $clips[$timestamp]["payload-type"]
+		];
 	}
 
 }

@@ -13,8 +13,7 @@ class User {
         'id' => 'integer',
         'email' => 'string',
         'google_token' => 'string',
-        'zync_token' => 'string',
-        'clip_count' => 'integer'
+        'zync_token' => 'string'
     ];
 
 	/**
@@ -43,6 +42,10 @@ class User {
 
         return new User($user);
     }
+
+	public static function getFromHeaderToken(){
+    	return self::findByZyncToken($_SERVER['HTTP_X_ZYNC_TOKEN']);
+	}
 
 	/**
 	 * @return null|User

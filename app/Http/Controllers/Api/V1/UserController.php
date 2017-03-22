@@ -36,8 +36,7 @@ class UserController extends Controller {
 					$data = [
 						"email" => $email,
 						"google_token" => $id_token,
-						"zync_token" => bin2hex(openssl_random_pseudo_bytes(16)),
-						"clip_count" => 0
+						"zync_token" => bin2hex(openssl_random_pseudo_bytes(16))
 					];
 
 					$user = User::create($data);

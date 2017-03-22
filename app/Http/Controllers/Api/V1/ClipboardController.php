@@ -12,17 +12,21 @@ use \Zync\Helpers\Utils;
 class ClipboardController extends Controller {
 
 	private static $REQUIRED_DATA = [
-		'properties' => [
-			'time' => 'integer',
-			'hash' => [
-				'crc32' => 'string',
-			],
-			'data' => 'string'
-		]
+		'timestamp' => 'integer',
+		'hash' => [
+			'crc32' => 'string',
+		],
+		'encryption' => [
+			'type' => 'AES256-GCM-NOPADDING',
+			'iv' => 'string',
+			'salt' => 'string'
+		],
+		'payload' => 'string',
+		'payload-type' => 'TEXT|IMAGE|VIDEO|BINARY'
 	];
 
 	public function getClipboard(Request $request) {
-		$user = User::findByZyncToken($request->header("X-ZYNC-TOKEN"));
+		$user = User::getFromHeaderToken();
 		$clipboard = $user->getClipboard();
 
 		if(is_null($clipboard)){
@@ -32,12 +36,26 @@ class ClipboardController extends Controller {
 		return $clipboard->getLastClipboardContents();
 	}
 
-	public function getClipboardWithTimestamp(Request $request, $timestamp) {
-		$user = User::findByZyncToken($request->header("X-ZYNC-TOKEN"));
+	public function getVerify(Request $request) {
+		$user = User::getFromHeaderToken();
 		$clipboard = $user->getClipboard();
 
 		if(is_null($clipboard)){
-			return response()->json(ApiError::$CLIPBOARD_EMPTY, 204);
+			return response()->json(ApiError::$CLIPBOARD_EMPTY, 200);
+		}
+
+		return [
+			"success" => true,
+			"data" => $clipboard->getLastClipboardVerification()
+		];
+	}
+
+	public function getClipboardWithTimestamp(Request $request, $timestamp) {
+		$user = User::getFromHeaderToken();
+		$clipboard = $user->getClipboard();
+
+		if(is_null($clipboard)){
+			return response()->json(ApiError::$CLIPBOARD_EMPTY, 200);
 		}
 
 		$contents = $clipboard->getTimestampClipboardContents($timestamp);
@@ -49,8 +67,28 @@ class ClipboardController extends Controller {
 		return $clipboard->getTimestampClipboardContents($timestamp);
 	}
 
+	public function getVerifyWithTimestamp(Request $request, $timestamp) {
+		$user = User::getFromHeaderToken();
+		$clipboard = $user->getClipboard();
+
+		if(is_null($clipboard)){
+			return response()->json(ApiError::$CLIPBOARD_EMPTY, 200);
+		}
+
+		$verification = $clipboard->getTimestampClipboardVerification($timestamp);
+
+		if(is_null($verification)){
+			return response()->json(ApiError::$CLIPBOARD_NOT_FOUND, 404);
+		}
+
+		return [
+			"success" => true,
+			"data" => $verification
+		];
+	}
+
 	public function postClipboard(Request $request) {
-		$user = User::findByZyncToken($request->header("X-ZYNC-TOKEN"));
+		$user = User::getFromHeaderToken();
 		$clipboard = $user->getClipboard();
 
 		$data = $request->json("data");
@@ -59,47 +97,52 @@ class ClipboardController extends Controller {
 			return response()->json(ApiError::$CLIPBOARD_INVALID, 400);
 		}
 
-		if(count(Utils::array_diff_key_recursive(self::$REQUIRED_DATA, $data)) > 0){
+		if(!Utils::array_validate_model(self::$REQUIRED_DATA, $data)){
 			return response()->json(ApiError::$CLIPBOARD_INVALID, 400);
 		}
 
-		$size = mb_strlen($data["properties"]["data"]);
-		if($size > 10000000 && $data["properties"]["time"] < time() - Clipboard::EXPIRY_TIME_MAX){
+		$size = mb_strlen($data["payload"]);
+		if($size > 10000000 && $data["timestamp"] < time() - Clipboard::EXPIRY_TIME_MAX){
 			return response()->json(ApiError::$CLIPBOARD_LATE, 400);
-		}else if($size < 10000000 && $data["properties"]["time"] < time() - Clipboard::EXPIRY_TIME_MIN){
+		}else if($size < 10000000 && $data["timestamp"] < time() - Clipboard::EXPIRY_TIME_MIN){
 			return response()->json(ApiError::$CLIPBOARD_LATE, 400);
 		}
 
-		if($data["properties"]["time"] > time()){
+		if($data["timestamp"] > time()){
 			return response()->json(ApiError::$CLIPBOARD_TIME_TRAVEL, 400);
 		}
 
 		if(!is_null($clipboard)){
-			if($data["properties"]["time"] < $clipboard->getData()["time"]){
+			if($data["timestamp"] < $clipboard->getData()["timestamp"]){
 				return response()->json(ApiError::$CLIPBOARD_OUTDATED, 400);
 			}
 
-			if($clipboard->exists($data["properties"]["hash"]["crc32"])){
+			if($clipboard->exists($data["hash"]["crc32"])){
 				return response()->json(ApiError::$CLIPBOARD_IDENTICAL, 400);
 			}
 
 			$clipboard->newClip($data);
-			$clipboard->saveContents($data["properties"]["data"], $data["properties"]["time"]);
+			$clipboard->saveContents($data["payload"], $data["timestamp"]);
 			$clipboard->save();
 		}else{
 			$clipboard = Clipboard::create($user->getData()->key()->pathEndIdentifier(), $data);
-			$clipboard->saveContents($data["properties"]["data"], $data["properties"]["time"]);
+			$clipboard->saveContents($data["payload"], $data["timestamp"]);
 		}
 
 		return response()->json(["success" => true]);
 	}
 
 	public function getHistory(Request $request) {
-		$user = User::findByZyncToken($request->header("X-ZYNC-TOKEN"));
+		$user = User::getFromHeaderToken();
 		$clipboard = $user->getClipboard();
 
 		if(is_null($clipboard)){
-			return response()->json(ApiError::$CLIPBOARD_EMPTY, 200);
+			return [
+				"success" => true,
+				"data" => [
+					"history" => []
+				]
+			];
 		}
 
 		return [

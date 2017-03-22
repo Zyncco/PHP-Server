@@ -9,8 +9,8 @@ use Zync\Helpers\Datastore;
 class Clipboard {
 
 	const CLIP_COUNT = 10;
-	const EXPIRY_TIME_MIN = 60;
-	const EXPIRY_TIME_MAX = 300;
+	const EXPIRY_TIME_MIN = 60000; // 60 Seconds
+	const EXPIRY_TIME_MAX = 300000; // 300 Seconds
 
 	private static $kind = "clipboard";
 

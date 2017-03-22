@@ -61,7 +61,7 @@ class Utils {
 					if($type == 'integer'){
 						if(!is_numeric($array[$key])){
 							$result = true;
-						}elseif(is_int(intval($array[$key]))){
+						}elseif(!is_int(intval($array[$key]))){
 							$result = true;
 						}
 					}
@@ -78,6 +78,10 @@ class Utils {
 		}
 
 		return null;
+	}
+
+	static function time_milliseconds(){
+		return round(microtime(true) * 1000);
 	}
 
 }

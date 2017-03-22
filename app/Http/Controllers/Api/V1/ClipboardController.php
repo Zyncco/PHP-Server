@@ -112,13 +112,13 @@ class ClipboardController extends Controller {
 		}
 
 		$size = mb_strlen($data["payload"]);
-		if($size > 10000000 && $data["timestamp"] < time() - Clipboard::EXPIRY_TIME_MAX){
+		if($size > 10000000 && $data["timestamp"] < Utils::time_milliseconds() - Clipboard::EXPIRY_TIME_MAX){
 			return response()->json(ApiError::$CLIPBOARD_LATE, 400);
-		}else if($size < 10000000 && $data["timestamp"] < time() - Clipboard::EXPIRY_TIME_MIN){
+		}else if($size < 10000000 && $data["timestamp"] < Utils::time_milliseconds() - Clipboard::EXPIRY_TIME_MIN){
 			return response()->json(ApiError::$CLIPBOARD_LATE, 400);
 		}
 
-		if($data["timestamp"] > time()){
+		if($data["timestamp"] > Utils::time_milliseconds()){
 			return response()->json(ApiError::$CLIPBOARD_TIME_TRAVEL, 400);
 		}
 

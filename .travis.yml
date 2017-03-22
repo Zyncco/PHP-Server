@@ -13,7 +13,7 @@ install:
 deploy:
   provider: gae
   skip_cleanup: true
-  keyfile: client-secret.json
+  keyfile: Zync-a37245d0309a.json
   project: zync-b3bce
   default: true
   on: master

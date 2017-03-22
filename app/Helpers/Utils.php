@@ -28,19 +28,23 @@ class Utils {
 		}
 
 		$diff = array_diff_key($model, $array);
-		$intersect = array_intersect_key($model, $array);
 
+		if(count($diff) > 0){
+			return array_values($diff)[0];
+		}
+
+		$intersect = array_intersect_key($model, $array);
 		foreach($intersect as $k => $v){
 			if(is_array($model[$k]) && is_array($array[$k])){
 				$d = Utils::array_diff_key_recursive($model[$k], $array[$k]);
 
-				if($d){
-					$diff[$k] = $d;
+				if(!is_null($d)){
+					return $k.".".$d;
 				}
 			}
 		}
 
-		return $diff;
+		return null;
 	}
 
 	static function array_validate_data_types(array $model, array $array){

@@ -56,7 +56,17 @@ class Utils {
 				}
 			}else{
 				if(in_array($type, Utils::$data_types)){
-					if($type != gettype($array[$key])){
+					$result = false;
+
+					if($type == 'integer'){
+						if(!is_numeric($array[$key])){
+							$result = true;
+						}elseif(is_int(intval($array[$key]))){
+							$result = true;
+						}
+					}
+
+					if($result){
 						return $key . " is not of type '" . $type . "'";
 					}
 				}else{

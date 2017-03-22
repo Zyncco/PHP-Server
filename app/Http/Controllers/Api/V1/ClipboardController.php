@@ -33,7 +33,10 @@ class ClipboardController extends Controller {
 			return response()->json(ApiError::$CLIPBOARD_EMPTY, 200);
 		}
 
-		return $clipboard->getLastClipboard();
+		return [
+			"success" => true,
+			"data" => $clipboard->getLastClipboard()
+		];
 	}
 
 	public function getClipboardWithTimestamp(Request $request, $timestamp) {
@@ -65,7 +68,10 @@ class ClipboardController extends Controller {
 			return response()->json(ApiError::$CLIPBOARD_NOT_FOUND, 404);
 		}
 
-		return $contents;
+		return [
+			"success" => true,
+			"data" => $contents
+		];
 	}
 
 	public function postClipboard(Request $request) {

@@ -99,20 +99,16 @@ class ClipboardController extends Controller {
 
 		$difference = Utils::array_diff_key_recursive(self::$REQUIRED_DATA, $data);
 		if(!is_null($difference)){
-			return response()->json(ApiError::$CLIPBOARD_INVALID + [
-				"error" => [
-					"missing" => $difference
-				]
-			], 400);
+			$response = ApiError::$CLIPBOARD_INVALID;
+			$response["error"]["missing"] = $difference;
+			return response()->json($response, 400);
 		}
 
 		$validation = Utils::array_validate_data_types(self::$REQUIRED_DATA, $data);
 		if(!is_null($validation)){
-			return response()->json(ApiError::$CLIPBOARD_INVALID + [
-				"error" => [
-					"invalid" => $validation
-				]
-			], 400);
+			$response = ApiError::$CLIPBOARD_INVALID;
+			$response["error"]["invalid"] = $validation;
+			return response()->json($response, 400);
 		}
 
 		$size = mb_strlen($data["payload"]);

@@ -52,12 +52,10 @@ class Utils {
 			}else{
 				if(in_array($type, Utils::$data_types)){
 					if($type != gettype($array[$key])){
-						var_dump($array[$key] . " NOT IN " . $type);
 						return false;
 					}
 				}else{
 					if(!in_array($array[$key], explode("|", $type))){
-						var_dump($array[$key] . " NOT IN " . $type);
 						return false;
 					}
 				}

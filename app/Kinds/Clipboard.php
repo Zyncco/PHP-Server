@@ -48,8 +48,10 @@ class Clipboard {
 		$insert = [
 			'user' => $userID,
 			'clip_count' => 1,
+			'latest' => $data["timestamp"],
 			'clips' => [
-				$data["timestamp"] => [
+				[
+					"timestamp" => $data["timestamp"],
 					"hash" => $data["hash"],
 					"encryption" => $data["encryption"],
 					"payload-type" => $data["payload-type"]
@@ -103,27 +105,35 @@ class Clipboard {
 	public function newClip($data){
 		$clips = $this->data["clips"];
 
-		if(!isset($clips[$data["timestamp"]]) && count($clips) + 1 > Clipboard::CLIP_COUNT){
-			asort($clips);
-			$removed = array_slice($clips, -1, 1, true);
-			$timestamp = key($removed);
+		if(count($clips) + 1 > Clipboard::CLIP_COUNT){
+			$remove = 0;
+			for($i = 0; $i < count($clips); $i++){
+				if($clips[$i]["timestamp"] == $this->data["latest"]){
+					$remove = $i;
+					break;
+				}
+			}
+
+			unset($clips[$remove]);
 
 			try{
 				Bucket::get()->delete([
-					"name" => $this->getHexPath($timestamp)
+					"name" => $this->getHexPath($this->data["latest"])
 				]);
 			}catch(\Exception $e){
 			}
 		}
 
-		$clips[$data["timestamp"]] = [
+		array_push($clips, [
+			"timestamp" => $data["timestamp"],
 			"hash" => $data["hash"],
 			"encryption" => $data["encryption"],
 			"payload-type" => $data["payload-type"]
-		];
+		]);
 
 		$this->data["clips"] = $clips;
 		$this->data["clip_count"] = $clips["clip_count"] + 1;
+		$this->data["latest"] = $data["timestamp"];
 	}
 
 	public function exists($crc32){
@@ -140,9 +150,9 @@ class Clipboard {
 		$history = [];
 		$clips = $this->data["clips"];
 
-		foreach($clips as $timestamp => $clip){
+		foreach($clips as $clip){
 			array_push($history, [
-				"timestamp" => $timestamp,
+				"timestamp" => $clip["timestamp"],
 				"hash" => $clip["hash"],
 				"encryption" => $clip["encryption"],
 				"payload-type" => $clip["payload-type"]
@@ -153,8 +163,7 @@ class Clipboard {
 	}
 
 	public function getLastClipboardContents(){
-		$clips = $this->data["clips"];
-		return Bucket::get()->object($this->getHexPath(key($clips)))->downloadAsString();
+		return Bucket::get()->object($this->getHexPath($this->data["latest"]))->downloadAsString();
 	}
 
 	public function getTimestampClipboardContents($timestamp){
@@ -168,14 +177,11 @@ class Clipboard {
 	}
 
 	public function getLastClipboardVerification(){
-		$clips = $this->data["clips"];
-		$lastTimestamp = key($clips);
-
 		return [
-			"timestamp" => $lastTimestamp,
-			"hash" => $clips[$lastTimestamp]["hash"],
-			"encryption" => $clips[$lastTimestamp]["encryption"],
-			"payload-type" => $clips[$lastTimestamp]["payload-type"]
+			"timestamp" => $this->data["latest"],
+			"hash" => $this->data["clips"][$this->data["latest"]]["hash"],
+			"encryption" => $this->data["clips"][$this->data["latest"]]["encryption"],
+			"payload-type" => $this->data["clips"][$this->data["latest"]]["payload-type"]
 		];
 	}
 

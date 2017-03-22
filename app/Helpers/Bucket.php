@@ -50,7 +50,7 @@ class Bucket {
 
 	    $streamHandler = new StreamHandler();
 	    $handler = HandlerStack::create($streamHandler);
-	    $guzzleClient = new Client(['handler' => $handler]);
+	    $guzzleClient = new Client(['handler' => $handler, 'verify' => false]);
 
         $this->storageClient = new StorageClient([
             'projectId' => $this->appId,

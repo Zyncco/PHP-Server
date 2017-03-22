@@ -97,8 +97,17 @@ class ClipboardController extends Controller {
 			return response()->json(ApiError::$CLIPBOARD_INVALID, 400);
 		}
 
-		if(!Utils::array_validate_model(self::$REQUIRED_DATA, $data)){
+		if(count(Utils::array_diff_key_recursive(self::$REQUIRED_DATA, $data)) == 0){
 			return response()->json(ApiError::$CLIPBOARD_INVALID, 400);
+		}
+
+		$validation = Utils::array_validate_data_types(self::$REQUIRED_DATA, $data);
+		if(!is_null($validation)){
+			return response()->json(ApiError::$CLIPBOARD_INVALID + [
+				"error" => [
+					"node" => $validation
+				]
+			], 400);
 		}
 
 		$size = mb_strlen($data["payload"]);

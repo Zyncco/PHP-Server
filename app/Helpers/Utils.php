@@ -46,28 +46,24 @@ class Utils {
 	static function array_validate_data_types(array $model, array $array){
 		foreach($model as $key => $type){
 			if(is_array($model[$key])){
-				if(!Utils::array_validate_data_types($model[$key], $array[$key])){
-					return false;
+				$result = Utils::array_validate_data_types($model[$key], $array[$key]);
+				if(!is_null($result)){
+					return $key.".".$result;
 				}
 			}else{
 				if(in_array($type, Utils::$data_types)){
 					if($type != gettype($array[$key])){
-						return false;
+						return $key;
 					}
 				}else{
 					if(!in_array($array[$key], explode("|", $type))){
-						return false;
+						return $key;
 					}
 				}
 			}
 		}
 
-		return true;
-	}
-
-	static function array_validate_model(array $model, array $array){
-		return (count(Utils::array_diff_key_recursive($model, $array)) == 0)
-			&& Utils::array_validate_data_types($model, $array);
+		return null;
 	}
 
 }

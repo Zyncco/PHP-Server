@@ -53,11 +53,11 @@ class Utils {
 			}else{
 				if(in_array($type, Utils::$data_types)){
 					if($type != gettype($array[$key])){
-						return $key;
+						return $key . " is not of type '" . $type . "'";
 					}
 				}else{
 					if(!in_array($array[$key], explode("|", $type))){
-						return $key;
+						return $key . " is not any of '" . $type . "'";
 					}
 				}
 			}

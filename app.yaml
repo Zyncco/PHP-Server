@@ -16,9 +16,8 @@ skip_files:
 - ^(.*/)?\.git$
 - ^(.*/)?composer.phar$
 - ^(.*/)?phpunit.xml$
-- ^(.*/)?/tests$
+- ^(.*/)?tests$
 - ^.env.example$
-- ^tests$
 - ^storage$
 - ^artisan$
 - ^.idea$

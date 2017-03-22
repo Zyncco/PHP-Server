@@ -19,6 +19,10 @@
 namespace Zync\Helpers;
 
 use Google\Cloud\Datastore\DatastoreClient;
+use GuzzleHttp\Client;
+use GuzzleHttp\Handler\StreamHandler;
+use GuzzleHttp\HandlerStack;
+use Psr\Http\Message\RequestInterface;
 
 class Datastore {
 
@@ -36,8 +40,16 @@ class Datastore {
 
     private function __construct() {
         $this->datasetId = env("GAE_APP_ID");
+
+	    $streamHandler = new StreamHandler();
+	    $handler = HandlerStack::create($streamHandler);
+	    $guzzleClient = new Client(['handler' => $handler]);
+
         $this->datastoreClient = new DatastoreClient([
             'projectId' => env("GAE_APP_ID"),
+	        'httpHandler' => function(RequestInterface $request, array $options = []) use ($guzzleClient) {
+		        return $guzzleClient->send($request, $options);
+	        }
         ]);
     }
 

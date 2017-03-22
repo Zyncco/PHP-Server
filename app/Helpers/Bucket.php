@@ -19,6 +19,10 @@
 namespace Zync\Helpers;
 
 use Google\Cloud\Storage\StorageClient;
+use GuzzleHttp\Client;
+use GuzzleHttp\Handler\StreamHandler;
+use GuzzleHttp\HandlerStack;
+use Psr\Http\Message\RequestInterface;
 
 class Bucket {
 
@@ -44,8 +48,15 @@ class Bucket {
 	    $this->appId = env("GAE_APP_ID");
 	    $this->bucketId = env("GAE_BUCKET_ID");
 
+	    $streamHandler = new StreamHandler();
+	    $handler = HandlerStack::create($streamHandler);
+	    $guzzleClient = new Client(['handler' => $handler]);
+
         $this->storageClient = new StorageClient([
             'projectId' => $this->appId,
+	        'httpHandler' => function(RequestInterface $request, array $options = []) use ($guzzleClient) {
+		        return $guzzleClient->send($request, $options);
+	        }
         ]);
 
         $this->bucket = $this->storageClient->bucket($this->bucketId);

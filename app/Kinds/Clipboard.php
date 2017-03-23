@@ -122,6 +122,8 @@ class Clipboard {
 				]);
 			}catch(\Exception $e){
 			}
+
+			$clips = array_values($clips);
 		}
 
 		array_push($clips, [

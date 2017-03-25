@@ -62,6 +62,7 @@ $app->singleton(
 $app->routeMiddleware([
 	'x-zync-token' => Zync\Http\Middleware\XZyncToken::class,
 	'pretty' => Zync\Http\Middleware\PrettyAPI::class,
+	'cors' => Zync\Http\Middleware\CORS::class,
 ]);
 
 /*
@@ -90,7 +91,7 @@ $app->routeMiddleware([
 |
 */
 
-$app->group(['namespace' => 'Zync\Http\Controllers\Api\v1', 'prefix' => 'v0', 'middleware' => 'pretty'], function (\Laravel\Lumen\Application $app) {
+$app->group(['namespace' => 'Zync\Http\Controllers\Api\v1', 'prefix' => 'v0', 'middleware' => ['pretty', 'cors']], function (\Laravel\Lumen\Application $app) {
 	$app->group(['prefix' => 'v0'], function (\Laravel\Lumen\Application $app) {
 		require __DIR__.'/../routes/api-v1-insecure.php';
 	});
